@@ -1,0 +1,168 @@
+version: 2.1
+
+orbs:
+  git-shallow-clone: guitarrapc/git-shallow-clone@2.4.0
+
+commands:
+  calculate-tag-name:
+    description: "Calculates the target tag name for Docker image."
+    steps:
+      - run:
+          name: Calculate tag to set for the built Docker image.
+          command: |
+            if [ ! -z $CIRCLE_TAG ]; then
+              TAG_VERSION=$CIRCLE_TAG
+            elif [ "$CIRCLE_BRANCH" = "edge" ]; then
+              TAG_VERSION=latest
+            else
+              TAG_VERSION=$CIRCLE_BRANCH;
+            fi
+            TAG_PLATFORM="$(uname -m)"
+
+            echo "export IMAGE_TAG='$TAG_VERSION-$TAG_PLATFORM'" >> $BASH_ENV
+            echo "export TAG_VERSION='$TAG_VERSION'" >> $BASH_ENV
+
+  install-git:
+    description: "Installs Git binary."
+    steps:
+      - run:
+          name: Install Git binary
+          command: sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y git
+
+  login-to-dockerhub:
+    description: "Logs into DockerHub."
+    steps:
+      - run:
+          name: Log into DockerHub.
+          command: echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+
+  build-and-push:
+    description: "Builds and pushes images."
+    parameters:
+      build-context:
+        type: string
+      image-name:
+        type: string
+      platform:
+        type: string
+    steps:
+      - run:
+          name: Build and push images
+          command: |
+            docker buildx build -t << parameters.image-name >>:$IMAGE_TAG --progress plain \
+              --build-arg CI=1 \
+              --platform << parameters.platform >> \
+              --progress plain \
+              --push << parameters.build-context >>
+
+  create-manifest:
+    description: "Creates combined manifest."
+    parameters:
+      image-name:
+        type: string
+    steps:
+      - run:
+          name: Create manifest
+          command: |
+            docker manifest create \
+            << parameters.image-name >>:$TAG_VERSION \
+            --amend << parameters.image-name >>:$TAG_VERSION-aarch64 \
+            --amend << parameters.image-name >>:$TAG_VERSION-x86_64
+            docker manifest push << parameters.image-name >>:$TAG_VERSION
+
+
+defaults: &defaults
+  environment:
+    DEBIAN_FRONTEND: "noninteractive"
+    DOCKER_BUILDKIT: "1"
+  machine:
+    image: ubuntu-2004:202111-02
+  parameters:
+    image-name:
+      type: string
+
+build-defaults: &build-defaults
+  <<: *defaults
+  parameters:
+    build-context:
+      type: string
+    image-name:
+      type: string
+
+
+jobs:
+  build:
+    <<: *build-defaults
+    steps:
+      - git-shallow-clone/checkout:
+          fetch_depth: 1
+      - install-git
+      - login-to-dockerhub
+      - calculate-tag-name
+      - build-and-push:
+          build-context: << parameters.build-context >>
+          image-name: << parameters.image-name >>
+          platform: "linux/amd64"
+
+  build-arm:
+    <<: *build-defaults
+    resource_class: arm.medium
+    steps:
+      - git-shallow-clone/checkout:
+          fetch_depth: 1
+      - install-git
+      - login-to-dockerhub
+      - calculate-tag-name
+      - build-and-push:
+          build-context: << parameters.build-context >>
+          image-name: << parameters.image-name >>
+          platform: "linux/arm64"
+
+  manifest:
+    <<: *defaults
+    steps:
+      - login-to-dockerhub
+      - calculate-tag-name
+      - create-manifest:
+          image-name: << parameters.image-name >>
+
+
+workflows:
+
+  build-docker-images:
+    jobs:
+      - build:
+          name: build-ptndown-pia-image
+          context: dockerhub
+          image-name: fluxstate/ptndown-pia
+          build-context: "."
+          filters:
+            branches:
+              only:
+                - main
+            tags:
+              only: /^\d+\.\d+.*/
+      - build-arm:
+          name: build-ptndown-pia-image-arm
+          context: dockerhub
+          image-name: fluxstate/ptndown-pia
+          build-context: "."
+          filters:
+            branches:
+              only:
+                - main
+            tags:
+              only: /^\d+\.\d+.*/
+      - manifest:
+          name: create-manifest
+          context: dockerhub
+          image-name: fluxstate/ptndown-pia
+          filters:
+            branches:
+              only:
+                - main
+            tags:
+              only: /^\d+\.\d+.*/
+          requires:
+            - build-ptndown-pia-image
+            - build-ptndown-pia-image-arm
