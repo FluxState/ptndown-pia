@@ -12,7 +12,7 @@ commands:
           command: |
             if [ ! -z $CIRCLE_TAG ]; then
               TAG_VERSION=$CIRCLE_TAG
-            elif [ "$CIRCLE_BRANCH" = "edge" ]; then
+            elif [ "$CIRCLE_BRANCH" = "main" ]; then
               TAG_VERSION=latest
             else
               TAG_VERSION=$CIRCLE_BRANCH;
