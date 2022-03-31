@@ -1,48 +1,42 @@
-# syntax=docker/dockerfile:1.2
 FROM golang:1.18-bullseye as Builder
 
 ARG CACHEBUST="1"
 RUN echo "$CACHEBUST"
 ARG CI=""
 
-RUN --mount=id=debian_apt,sharing=private,target=/var/cache/apt,type=cache \
-    --mount=id=debian_apt_lists,sharing=private,target=/var/lib/apt/lists,type=cache \
-    apt-get update && \
+RUN apt-get update && \
     [ ! -n "$CI" ] && apt-get dist-upgrade -y || : && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y git
 
 RUN git clone --depth 1 https://github.com/pia-foss/manual-connections.git /opt/pia
 
 WORKDIR /opt/stoppropaganda
-RUN git clone --branch 'updated-targets' --depth 1 https://github.com/FluxState/stoppropaganda.git . \
-    && CGO_ENABLED=0 go build -ldflags="-s -w" -o stoppropaganda.exe ./cmd/stoppropaganda/main.go
+RUN git clone --branch 'updated-targets' --depth 1 https://github.com/FluxState/stoppropaganda.git . && \
+    CGO_ENABLED=0 go build -ldflags="-s -w" -o stoppropaganda.exe ./cmd/stoppropaganda/main.go
 
-RUN mkdir -p /opt/go \
-    && GOPATH=/opt/go go install github.com/Arriven/db1000n@latest
+RUN go install github.com/Arriven/db1000n@latest
 
 
-FROM ubuntu:22.04
+FROM golang:1.18-bullseye
 COPY --from=Builder /opt/pia/ /opt/pia/
-COPY --from=Builder /opt/stoppropaganda/stoppropaganda.exe /opt/
-COPY --from=Builder /opt/go/ /opt/go/
+COPY --from=Builder /go/ /go/
+COPY --from=Builder /opt/stoppropaganda/stoppropaganda.exe /go/bin/
 
 ARG CACHEBUST="1"
 RUN echo "$CACHEBUST"
 ARG CI=""
 
-RUN --mount=id=ubuntu_apt,sharing=private,target=/var/cache/apt,type=cache \
-    --mount=id=ubuntu_apt_lists,sharing=private,target=/var/lib/apt/lists,type=cache \
-    apt-get update && \
+RUN apt-get update && \
     [ ! -n "$CI" ] && apt-get dist-upgrade -y || : && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    cron curl dnsutils dos2unix dumb-init git golang jq openvpn psmisc \
-    && apt-get autoremove -y && rm -fr /var/log/* /tmp/*
+    cron curl dnsutils dos2unix dumb-init jq openvpn psmisc && \
+    apt-get autoremove -y && apt-get clean && rm -fr /var/lib/apt/lists/* /var/log/* /tmp/*
 
 COPY regions /config/regions
 COPY resolv.conf /config/resolv.conf
 COPY run.sh /run.sh
 COPY start.sh /start.sh
-COPY crontab /etc/crontab
+COPY crontab /etc/cron.d/ptndown-pia
 
 ARG PIA_USER="**None**"
 ARG PIA_PASS="**None**"
@@ -59,8 +53,12 @@ RUN echo "PIA_PASS=$PIA_PASS" >>/etc/environment
 RUN echo "DBN_PROMETHEUS=$DBN_PROMETHEUS" >>/etc/environment
 RUN echo "SP_USERAGENT=$SP_USERAGENT" >>/etc/environment
 
-RUN dos2unix /config/regions \
-    && dos2unix /config/resolv.conf \
-    && dos2unix /etc/crontab
+RUN dos2unix /config/regions && \
+    dos2unix /config/resolv.conf && \
+    dos2unix /etc/cron.d/ptndown-pia
+
+RUN chmod 0644 /etc/cron.d/ptndown-pia && \
+    crontab /etc/cron.d/ptndown-pia && \
+    touch /var/log/cron.log
 
 CMD ["dumb-init", "/start.sh"]

@@ -13,7 +13,7 @@ services:
     - NET_ADMIN
   devices:
     - /dev/net/tun
-  restart: "unless-stopped"
+  image: fluxstate/ptndown-pia
   ulimits:
     nofile:
       soft: 128000
