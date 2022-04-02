@@ -14,6 +14,8 @@ services:
   devices:
     - /dev/net/tun
   image: fluxstate/ptndown-pia
+  ports:
+    - "8049/tcp"
   ulimits:
     nofile:
       soft: 128000
