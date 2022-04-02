@@ -1,5 +1,5 @@
 SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
-*/30    *   * * *	root	/run.sh >>/var/log/ptndown.log
+*/15    *   * * *	root	/run.sh >>/var/log/ptndown.log
 *       *   * * *	root	shuf /config/resolv.conf >/etc/resolv.conf

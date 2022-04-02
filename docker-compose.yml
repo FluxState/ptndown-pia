@@ -18,5 +18,5 @@ services:
     - "8049/tcp"
   ulimits:
     nofile:
-      soft: 128000
-      hard: 128000
+      soft: 1048576
+      hard: 1048576
