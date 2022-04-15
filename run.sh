@@ -4,7 +4,7 @@ killall -9 stoppropaganda.exe
 killall -9 db1000n
 
 killall openvpn
-sleep "$(shuf -i 1-10 -n 1)"
+sleep "$(shuf -i 1-5 -n 1)"
 
 set -e
 
