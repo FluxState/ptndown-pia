@@ -17,5 +17,5 @@ PREFERRED_REGION="$(shuf -n 1 /config/regions | sed -e 's/\r//' | sed -e 's/\n//
 
 shuf /config/resolv.conf >/etc/resolv.conf
 
-/go/bin/db1000n --prometheus_on="$DBN_PROMETHEUS" &
+/go/bin/db1000n --prometheus_on="$DBN_PROMETHEUS" --refresh-interval=1h &
 /go/bin/stoppropaganda.exe --dnstimeout 500ms --useragent="$SP_USERAGENT" &
