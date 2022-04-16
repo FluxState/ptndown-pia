@@ -11,7 +11,7 @@ RUN apt-get update && \
 RUN git clone --depth 1 https://github.com/pia-foss/manual-connections.git /opt/pia
 
 WORKDIR /opt/stoppropaganda
-RUN git clone --branch 'cleaned4pia-test' --depth 1 https://github.com/FluxState/stoppropaganda.git . && \
+RUN git clone --branch 'cleaned4pia' --depth 1 https://github.com/FluxState/stoppropaganda.git . && \
     CGO_ENABLED=0 go build -ldflags="-s -w" -o stoppropaganda.exe ./cmd/stoppropaganda/main.go
 
 RUN go install github.com/Arriven/db1000n@latest
