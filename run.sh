@@ -4,7 +4,7 @@ killall -9 stoppropaganda.exe
 killall -9 db1000n
 
 killall openvpn
-sleep 1
+sleep 5
 
 set -e
 
