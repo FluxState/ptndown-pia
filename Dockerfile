@@ -17,7 +17,7 @@ RUN git clone --branch 'cleaned4pia' --depth 1 https://github.com/FluxState/stop
 RUN go install github.com/Arriven/db1000n@latest
 
 
-FROM golang:1.18-bullseye
+FROM golang:1.18-bullseye as Runner
 
 COPY --from=Builder /opt/pia/ /opt/pia/
 COPY --from=Builder /go/ /go/

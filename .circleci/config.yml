@@ -49,11 +49,13 @@ commands:
       - run:
           name: Build and push images
           command: |
-            docker buildx build -t << parameters.image-name >>:$IMAGE_TAG --progress plain \
+            docker buildx build \
               --build-arg CI=1 \
               --platform << parameters.platform >> \
               --progress plain \
-              --push << parameters.build-context >>
+              --push << parameters.build-context >> \
+              --tag << parameters.image-name >>:$IMAGE_TAG \
+              --target Runner
 
   create-manifest:
     description: "Creates combined manifest."
