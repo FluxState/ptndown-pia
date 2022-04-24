@@ -19,10 +19,6 @@ RUN go install github.com/Arriven/db1000n@latest
 
 FROM golang:1.18-bullseye as Runner
 
-COPY --from=Builder /opt/pia/ /opt/pia/
-COPY --from=Builder /go/ /go/
-COPY --from=Builder /opt/stoppropaganda/stoppropaganda.exe /go/bin/
-
 ARG CACHEBUST="1"
 RUN echo "$CACHEBUST"
 ARG CI=""
@@ -52,5 +48,9 @@ ENV PIA_USER=$PIA_USER \
 RUN chmod 0644 /etc/cron.d/ptndown-pia && \
     crontab /etc/cron.d/ptndown-pia && \
     touch /var/log/cron.log
+
+COPY --from=Builder /opt/pia/ /opt/pia/
+COPY --from=Builder /go/ /go/
+COPY --from=Builder /opt/stoppropaganda/stoppropaganda.exe /go/bin/
 
 CMD ["dumb-init", "/start.sh"]
