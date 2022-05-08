@@ -1,4 +1,4 @@
-#!/usr/bin/dumb-init /bin/sh
+#!/usr/bin/dumb-init /bin/bash
 
 touch /var/log/ptndown.log
 
@@ -8,6 +8,6 @@ echo "DBN_PROMETHEUS=$DBN_PROMETHEUS" >>/etc/environment
 
 service cron start
 
-bash /run.sh >>/var/log/ptndown.log
+bash /run.sh &>>/var/log/ptndown.log
 
 tail -f /var/log/ptndown.log
