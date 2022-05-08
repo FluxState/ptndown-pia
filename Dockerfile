@@ -26,6 +26,7 @@ RUN apt-get update && \
     apt-get autoremove -y && apt-get clean && rm -fr /var/lib/apt/lists/* /var/log/* /tmp/*
 
 COPY regions /config/regions
+COPY resolv.conf /config/resolv.conf
 COPY run.sh /run.sh
 COPY start.sh /start.sh
 COPY crontab /etc/cron.d/ptndown-pia

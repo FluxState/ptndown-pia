@@ -7,6 +7,8 @@ sleep "$(shuf -i 1-30 -n 1)"
 
 set -e
 
+echo 'nameserver 1.1.1.1' >/etc/resolv.conf
+
 cd /opt/pia/
 PIA_DNS='false' PIA_PF='false' VPN_PROTOCOL='openvpn_udp_standard' DISABLE_IPV6='yes' \
 PREFERRED_REGION="$(shuf -n 1 /config/regions | sed -e 's/\r//' | sed -e 's/\n//')" \
@@ -14,4 +16,6 @@ PREFERRED_REGION="$(shuf -n 1 /config/regions | sed -e 's/\r//' | sed -e 's/\n//
 
 echo -e "$(curl 'https://api.my-ip.io/ip' 2> /dev/null)\n"
 
-/go/bin/db1000n --country-check-retries=1 --log-format=console --prometheus_on="$DBN_PROMETHEUS" &
+shuf /config/resolv.conf >/etc/resolv.conf
+
+/go/bin/db1000n --country-check-retries=1 --log-format=simple --prometheus_on="$DBN_PROMETHEUS" &
