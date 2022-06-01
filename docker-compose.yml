@@ -6,7 +6,6 @@ services:
       PIA_USER: ${PIA_USER}
       PIA_PASS: ${PIA_PASS}
       DBN_PROMETHEUS: ${DBN_PROMETHEUS}
-      SP_USERAGENT: ${SP_USERAGENT}
     context: .
     dockerfile: Dockerfile
   cap_add:
