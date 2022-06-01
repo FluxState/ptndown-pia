@@ -1,4 +1,4 @@
-FROM golang:1.18-bullseye as Builder
+FROM golang:1.18-bullseye as builder
 
 ARG CACHEBUST="1"
 RUN echo "$CACHEBUST"
@@ -10,10 +10,14 @@ RUN apt-get update && \
 
 RUN git clone --depth 1 https://github.com/pia-foss/manual-connections.git /opt/pia
 
-RUN go install github.com/Arriven/db1000n@latest
+WORKDIR /build
+RUN curl -O https://raw.githubusercontent.com/Arriven/db1000n/main/install.sh && \
+    bash ./install.sh && \
+    mkdir -p /go/bin && \
+    mv /build/db1000n /go/bin/
 
 
-FROM golang:1.18-bullseye as Runner
+FROM golang:1.18-bullseye as runner
 
 ARG CACHEBUST="1"
 RUN echo "$CACHEBUST"
@@ -43,7 +47,7 @@ RUN chmod 0644 /etc/cron.d/ptndown-pia && \
     crontab /etc/cron.d/ptndown-pia && \
     touch /var/log/cron.log
 
-COPY --from=Builder /opt/pia/ /opt/pia/
-COPY --from=Builder /go/ /go/
+COPY --from=builder /opt/pia/ /opt/pia/
+COPY --from=builder /go/ /go/
 
 CMD ["dumb-init", "/start.sh"]
