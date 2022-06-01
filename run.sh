@@ -18,7 +18,6 @@ echo -e "$(curl 'https://api.my-ip.io/ip' 2> /dev/null)\n"
 
 shuf /config/resolv.conf >/etc/resolv.conf
 
-/go/bin/db1000n --version
 /go/bin/db1000n \
   --enable-self-update \
   --country-check-retries=1 \
