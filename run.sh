@@ -18,4 +18,10 @@ echo -e "$(curl 'https://api.my-ip.io/ip' 2> /dev/null)\n"
 
 shuf /config/resolv.conf >/etc/resolv.conf
 
-/go/bin/db1000n --country-check-retries=1 --log-format=simple --prometheus_on="$DBN_PROMETHEUS" &
+/go/bin/db1000n \
+  --enable-self-update \
+  --country-check-retries=1 \
+  --log-format=simple \
+  --prometheus_on="$DBN_PROMETHEUS" \
+  --restart-on-update=false \
+  --self-update-check-frequency=55m &>>/var/log/ptndown.log &
