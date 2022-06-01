@@ -55,7 +55,7 @@ commands:
               --progress plain \
               --push << parameters.build-context >> \
               --tag << parameters.image-name >>:$IMAGE_TAG \
-              --target Runner
+              --target runner
 
   create-manifest:
     description: "Creates combined manifest."
